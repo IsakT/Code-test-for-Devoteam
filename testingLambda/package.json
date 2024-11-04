@@ -1,0 +1,21 @@
+{
+  "name": "testinglambda",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test/testLocal.js",
+    "testAWS": "mocha test/testAWS.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@eslint/js": "^9.14.0",
+    "chai": "^5.1.2",
+    "eslint": "^9.14.0",
+    "globals": "^15.12.0",
+    "mocha": "^10.8.2"
+  }
+}
