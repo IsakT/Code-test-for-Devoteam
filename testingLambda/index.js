@@ -24,11 +24,15 @@ function composeError(error, { grid, position, direction, commands }) {
   return { ...errors[error], context: { grid, position, direction, commands } }
 }
 
+function validDirections() { 
+  return ['N', 'E', 'S', 'W']
+}
+
 function calculatePosition({ x, y }, { x: initx, y: inity, dir }, commandsInput) {
   if (!Array.isArray(commandsInput) || commandsInput.length < 1 || typeof commandsInput != 'string') {
     return composeError('ebadcom', { grid: { x, y }, position: { x: initx, y: inity }, commandsInput })
   }
-  if (checkOutOfBounds({ x, y }, { x: initx, y: inity })) {
+  if (checkOutOfBounds({ x, y }, { x: initx, y: inity }) || !validDirections().includes(dir)) {
     return composeError('ebadpos', { grid: { x, y }, position: { x: initx, y: inity }, direction: dir, commandsInput })
   }
 
@@ -105,10 +109,13 @@ function checkOutOfBounds(grid, position) {
 }
 
 function validateGrid(x, y) {
-  const parsedX = parseInt(x, 10)
-  const parsedY = parseInt(y, 10)
+  if (typeof x !== 'number' && typeof x !== 'string') return false
+  if (typeof y !== 'number' && typeof y !== 'string') return false
+  
+  const parsedX = Number(x)
+  const parsedY = Number(y)
 
-  return Number.isInteger(parsedX) && Number.isInteger(parsedY) ? {parsedX, parsedY} : false
+  return Number.isInteger(parsedX) && parsedX >= 0 && Number.isInteger(parsedY) && parsedY >= 0 ? {parsedX, parsedY} : false
 }
 
 export { calculatePosition, calculateDirection, calculateMove, validateGrid }
