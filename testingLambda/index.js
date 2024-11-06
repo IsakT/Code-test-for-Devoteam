@@ -12,7 +12,7 @@ function composeError(error, { grid, position, direction, commands }) {
     },
     'ebadpos': {
       code: 3, message:
-        'EBADPOS: Faulty position of robot. No commands will be executed. /' +
+        'EBADPOS: Faulty position or direction of robot. /' +
         `Expected position to be within grid: x ${grid.x}, y ${grid.y}. Found: x ${position.x} y ${position.y}`
     },
     'ebadgrid': {
@@ -28,35 +28,73 @@ function validDirections() {
   return ['N', 'E', 'S', 'W']
 }
 
-function calculatePosition({ x, y }, { x: initx, y: inity, dir }, commandsInput) {
-  if (!Array.isArray(commandsInput) || commandsInput.length < 1 || typeof commandsInput != 'string') {
-    return composeError('ebadcom', { grid: { x, y }, position: { x: initx, y: inity }, commandsInput })
-  }
-  if (checkOutOfBounds({ x, y }, { x: initx, y: inity }) || !validDirections().includes(dir)) {
-    return composeError('ebadpos', { grid: { x, y }, position: { x: initx, y: inity }, direction: dir, commandsInput })
-  }
+function validCommands() { 
+  return [
+    ...validPivots(),
+    ...validMovements()
+  ]
+}
 
-  const grid = validateGrid(x, y)
+function validPivots() {
+  return ['L', 'R']
+}
 
+function validMovements() { 
+  return ['F']
+}
+
+function inputParsing(gridSize, position, commandsInput) {
+  const errors = []
+  const grid = validateGrid(gridSize)
+  const initialPosition = validatePosition(position)
+  const commands = validateCommands(commandsInput)
+
+  // valid grid
   if (!grid) {
-    return composeError('ebadgrid', { grid: { x, y }, position: { x: initx, y: inity }, direction: dir, commands })
+    errors.push(
+      composeError('ebadgrid', { grid: gridSize, position, direction: position?.dir, commandsInput }))
   }
-  
-  const commands = Array.isArray(commandsInput) ? commandsInput : commandsInput.split('');
 
-  const results = commands.reduce((acc, command) => {
-    if (!['F', 'L', 'R'].includes(command)) {
-      const error = composeError('ebadcom', { grid, position: acc.currentPosition, direction: acc.currentDirection, commands })
-      acc.errors.push(error)
-      return acc
+  // valid current position relative to grid
+  if (!initialPosition || !initialPosition.dir || checkOutOfBounds(grid, initialPosition)) {
+    errors.push(
+      composeError('ebadpos', { grid: gridSize, position, direction: position?.dir, commandsInput })
+    )
+  }
+
+  // valid commands and direction
+  if (!commands) {
+    errors.push(
+      composeError('ebadcom', { grid: gridSize, position, direction: position?.dir, commandsInput })
+    )
+  }
+
+  return {grid, initialPosition, commands, errors}
+}
+
+function calculatePosition(gridSize, initPos, commandsInput) {
+  const { grid, initialPosition, commands, errors } = inputParsing(gridSize, initPos, commandsInput)
+  
+  if (errors.length > 0) {
+    return {
+      // set position to undefined to signal robot not to move from whatever position it was in.
+      currentPosition: { x: undefined, y: undefined }, 
+      currentDirection: undefined,
+      errors
     }
-    if (['L', 'R'].includes(command)) {
+  }
+
+  // iterate over commands and execute them
+  const results = commands.reduce((acc, command) => {
+    if (validPivots().includes(command)) {
       acc.currentDirection = calculateDirection(acc.currentDirection, command)
-    } else if (command === 'F') {
-      const suggestedMove = calculateMove(acc.currentPosition, acc.currentDirection)
+    }
+    
+    if (validMovements().includes(command)) {
+      const suggestedMove = calculateMove(acc.currentPosition, acc.currentDirection, command)
       const outofbounds = checkOutOfBounds(grid, suggestedMove)
       if (outofbounds) {
-        const error = composeError('eoutbounds', { grid, position: acc.currentPosition, direction: acc.currentDirection, commands })
+        const error = composeError('eoutbounds', { grid, position: suggestedMove, direction: acc.currentDirection, commands })
         acc.errors.push(error)
         return acc
       }
@@ -65,12 +103,10 @@ function calculatePosition({ x, y }, { x: initx, y: inity, dir }, commandsInput)
 
     return acc
   }, {
-    currentPosition: { initx, inity },
-    currentDirection: dir,
+    currentPosition: initialPosition,
+    currentDirection: initialPosition.dir,
     errors: []
   })
-
-  console.log({ results })
 
   return results
 }
@@ -93,12 +129,12 @@ function calculateDirection(currentDir, commandDir) {
   }
 }
 
-function calculateMove({ x, y }, direction) {
-  switch (direction) {
-    case 'N': return { x, y: y - 1 }
-    case 'S': return { x, y: y + 1 }
-    case 'W': return { x: x - 1, y }
-    case 'E': return { x: x + 1, y }
+function calculateMove({ x, y }, direction, command) {
+  switch (`${direction}-${command}`) {
+    case 'N-F': return { x, y: y - 1 }
+    case 'S-F': return { x, y: y + 1 }
+    case 'W-F': return { x: x - 1, y }
+    case 'E-F': return { x: x + 1, y }
   }
 }
 
@@ -108,14 +144,55 @@ function checkOutOfBounds(grid, position) {
   return false
 }
 
-function validateGrid(x, y) {
+function validateCommands(commandsInput) {
+  const doValidate = (commands) => {
+    const badCommandsFound = commands.some((command) => {
+      return !validCommands().includes(command)
+    })
+
+    return badCommandsFound ? false : commands
+  }
+
+  // handle commandsInput being a string
+  if (typeof commandsInput === 'string') {
+    const commands = commandsInput.replaceAll(' ', '').split('')
+    return doValidate(commands)
+  }
+
+  // handle commandsInput being an array
+  if (Array.isArray(commandsInput) && commandsInput.length > 0){
+    return doValidate(commandsInput)
+  }
+
+  // guilty until proven otherwise
+  return false
+}
+
+function validatePosition(pos) { 
+  const parsed = validateCoordinates(pos?.x, pos?.y)
+  if (parsed) {
+    return { x: parsed.x, y: parsed.y, dir: validateDirection(pos.dir) }  
+  }
+  return false
+}
+
+function validateDirection(direction) {
+  return validDirections().includes(direction) ? direction : false
+}
+
+function validateGrid(grid) {
+  return validateCoordinates(grid?.x, grid?.y)
+}
+
+function validateCoordinates(x, y) {
   if (typeof x !== 'number' && typeof x !== 'string') return false
   if (typeof y !== 'number' && typeof y !== 'string') return false
-  
+
   const parsedX = Number(x)
   const parsedY = Number(y)
 
-  return Number.isInteger(parsedX) && parsedX >= 0 && Number.isInteger(parsedY) && parsedY >= 0 ? {parsedX, parsedY} : false
+  return Number.isInteger(parsedX) && parsedX >= 0 && Number.isInteger(parsedY) && parsedY >= 0 ? { x: parsedX, y: parsedY } : false
+
 }
 
-export { calculatePosition, calculateDirection, calculateMove, validateGrid }
+export { calculatePosition, calculateDirection, calculateMove, validateGrid, validateCommands }

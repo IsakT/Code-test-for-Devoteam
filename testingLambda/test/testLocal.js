@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { calculatePosition, calculateDirection, calculateMove, validateGrid } from '../index.js'
+import { calculatePosition, calculateDirection, calculateMove, validateGrid, validateCommands } from '../index.js'
 import { describe, it } from 'mocha'
 
 describe('unit testing', function () {
@@ -14,75 +14,128 @@ describe('unit testing', function () {
     expect(calculateDirection('W', 'R')).to.equal('N')
   })
   it('calculateMove', function () { 
-    let position1 = {x: 5, y: 7}
-    let direction1 = 'N'
-    let newPosition1 = calculateMove(position1, direction1)
+    let position = {x: 5, y: 7}
+    let direction = 'N'
+    let command = 'F'
+    let newPosition = calculateMove(position, direction, command)
 
-    expect(newPosition1).to.deep.equal({x: 5, y: 6})
+    expect(newPosition).to.deep.equal({x: 5, y: 6})
 
-    let position2 = { x: 5, y: 7 }
-    let direction2 = 'E'
-    let newPosition2 = calculateMove(position2, direction2)
+    position = { x: 5, y: 7 }
+    direction = 'E'
+    newPosition = calculateMove(position, direction, command)
 
-    expect(newPosition2).to.deep.equal({ x: 6, y: 7 })
+    expect(newPosition).to.deep.equal({ x: 6, y: 7 })
 
-    let position3 = { x: 5, y: 7 }
-    let direction3 = 'S'
-    let newPosition3 = calculateMove(position3, direction3)
+    position = { x: 5, y: 7 }
+    direction = 'S'
+    newPosition = calculateMove(position, direction, command)
 
-    expect(newPosition3).to.deep.equal({ x: 5, y: 8 })
+    expect(newPosition).to.deep.equal({ x: 5, y: 8 })
 
-    let position4 = { x: 5, y: 7 }
-    let direction4 = 'W'
-    let newPosition4 = calculateMove(position4, direction4)
+    position = { x: 5, y: 7 }
+    direction = 'W'
+    newPosition = calculateMove(position, direction, command)
 
-    expect(newPosition4).to.deep.equal({ x: 4, y: 7 })
+    expect(newPosition).to.deep.equal({ x: 4, y: 7 })
   })
   it('validateGrid', function () {
-    expect(validateGrid(0, 4)).to.deep.equal({ parsedX: 0, parsedY: 4 })
-    expect(validateGrid(100, 4)).to.deep.equal({ parsedX: 100, parsedY: 4 })
-    expect(validateGrid(1e10, 4)).to.deep.equal({ parsedX: 10000000000, parsedY: 4 })
-    expect(validateGrid(Number.MAX_SAFE_INTEGER, 4)).to.deep.equal({ parsedX: Number.MAX_SAFE_INTEGER, parsedY: 4 })
-    expect(validateGrid('1', '4e3')).to.deep.equal({ parsedX: 1, parsedY: 4000 })
-    expect(validateGrid('1', '4')).to.deep.equal({ parsedX: 1, parsedY: 4 })
+    expect(validateGrid({x: 0, y: 4})).to.deep.equal({ x: 0, y: 4 })
+    expect(validateGrid({x: 100, y: 4})).to.deep.equal({ x: 100, y: 4 })
+    expect(validateGrid({x: 1e10, y: 4})).to.deep.equal({ x: 10000000000, y: 4 })
+    expect(validateGrid({x: Number.MAX_SAFE_INTEGER,y:  4})).to.deep.equal({ x: Number.MAX_SAFE_INTEGER, y: 4 })
+    expect(validateGrid({x: '1', y: '4e3'})).to.deep.equal({ x: 1, y: 4000 })
+    expect(validateGrid({x: '1', y: '4'})).to.deep.equal({ x: 1, y: 4 })
     
-    expect(validateGrid(Infinity, 4)).to.equal(false)
-    expect(validateGrid(-1, 4)).to.equal(false)
-    expect(validateGrid(1.4, 4.6)).to.equal(false)
-    expect(validateGrid(true, 4)).to.equal(false)
-    expect(validateGrid(['1'], 4)).to.equal(false)
-    expect(validateGrid(['1', 2], 4)).to.equal(false)
-    expect(validateGrid(1, {foo: 'bar'})).to.equal(false)
-    expect(validateGrid(1, null)).to.equal(false)
-    expect(validateGrid(1, undefined)).to.equal(false)
-    expect(validateGrid('1', 'true')).to.equal(false)
+    // sad paths :(
+    expect(validateGrid({x: Infinity, y: 4})).to.equal(false)
+    expect(validateGrid({x: -1, y: 4})).to.equal(false)
+    expect(validateGrid({x: 1.4,y:  4.6})).to.equal(false)
+    expect(validateGrid({x: true, y: 4})).to.equal(false)
+    expect(validateGrid({x: ['1'], y: 4})).to.equal(false)
+    expect(validateGrid({x: ['1', '2'], y: 4})).to.equal(false)
+    expect(validateGrid({x: 1, y: {foo: 'bar'}})).to.equal(false)
+    expect(validateGrid({x: 1, y: null})).to.equal(false)
+    expect(validateGrid({x: 1, y: undefined})).to.equal(false)
+    expect(validateGrid({x: '1', y: 'true'})).to.equal(false)
+  })
+
+  it('validateCommands', function () {
+    let commands = 'LRFFRRFLFFFFRFFFFRFFFFFFFRR'
+    expect(validateCommands(commands)).to.deep.equal(commands.split(''))
+
+    commands = 'LRFFRRFLFFFFRFFFFRFFFFFFFRR'.split('')
+    expect(validateCommands(commands)).to.equal(commands)
+
+    commands = ''
+    expect(validateCommands(commands)).to.deep.equal([])
+
+    commands = '32467efufdsk'
+    expect(validateCommands(commands)).to.equal(false)
+
+    commands = ['LRFFRRFLFFFFRFFFFRFFFFFFFRR']
+    expect(validateCommands(commands)).to.equal(false)
+
+    commands = true
+    expect(validateCommands(commands)).to.equal(false)
+
+    commands = 12345
+    expect(validateCommands(commands)).to.equal(false)
   })
 
 })
 
-// describe('calculate position, integration test', function () {
-//   it('output the correct final position of the robot given all inputs', function () {
-//     const grid = { x: 5, y: 7 }
-//     const startingPos = { x: 3, y: 3, dir: 'E' }
-//     const commands = 'LRFLLRLRLFLRLF'
-//     const result = calculatePosition(grid, startingPos, commands)
+describe('integration test', function () {
+  it('output the correct final position of the robot given all inputs', function () {
+    let grid = { x: 5, y: 7 }
+    let startingPos = { x: 3, y: 3, dir: 'E' }
+    let commands = 'LRFFRRFLFFFFRFFFFRFFFFFFFRR'
+    let result = calculatePosition(grid, startingPos, commands)
 
-//     expect(result).to.deep.equal({ x: 3, y: 3, dir: 'N' })
-//   })
-//   it('handle out-of-bounds situation', function () {
-//     const grid = { x: 5, y: 7 }
-//     const startingPos = { x: 3, y: 3, dir: 'E' }
-//     const commands = 'LRFLLRLRLFLRLF'
-//     const result = calculatePosition(grid, startingPos, commands)
+    expect(result).to.deep.equal({
+      currentPosition: { x: 0, y: 0},
+      currentDirection: 'S',
+      errors: []
+    })
 
-//     expect(result).to.deep.equal({ x: 3, y: 3, dir: 'N' })
-//   }),
-//     it('handle bad commands', function () {
-//       const grid = { x: 5, y: 7 }
-//       const startingPos = { x: 3, y: 3, dir: 'E' }
-//       const commands = 'LRFfdsklfn4386oofdsl'
-//       const result = calculatePosition(grid, startingPos, commands)
+    commands = 'LRFFRR FLFFFFRFF FFRFFF FFFFRR'
+    result = calculatePosition(grid, startingPos, commands)
 
-//       expect(result).to.deep.equal({ x: 3, y: 3, dir: 'N' })
-//     })
-// })
+    expect(result).to.deep.equal({
+      currentPosition: { x: 0, y: 0 },
+      currentDirection: 'S',
+      errors: []
+    })
+
+    commands = 'LRFFRRFLFFFFRFFFFRFFFFFFFRR'.split('')
+    result = calculatePosition(grid, startingPos, commands)
+
+    expect(result).to.deep.equal({
+      currentPosition: { x: 0, y: 0 },
+      currentDirection: 'S',
+      errors: []
+    })
+  }),
+  it('handle an out-of-bounds situation', function () {
+    const grid = { x: 5, y: 7 }
+    const startingPos = { x: 3, y: 3, dir: 'E' }
+    const commands = 'FFFFFFFFFFFFFFFFF'
+    const { currentPosition , currentDirection, errors} = calculatePosition(grid, startingPos, commands)
+
+    expect(currentPosition).to.deep.equal({x: 5, y: 3})
+    expect(currentDirection).to.equal('E')
+    expect(errors[0].code).to.equal(2)
+    expect(errors.length).to.equal(15)
+  }),
+  it('handle bad commands', function () {
+    const grid = { x: 5, y: 7 }
+    const startingPos = { x: 3, y: 3, dir: 'E' }
+    const commands = 'LRFfdsklfn4386oofdsl'
+    const { currentPosition, currentDirection, errors } = calculatePosition(grid, startingPos, commands)
+
+    expect(currentPosition).to.deep.equal({ x: undefined, y: undefined })
+    expect(currentDirection).to.equal(undefined)
+    expect(errors[0].code).to.equal(1)
+    expect(errors.length).to.equal(1)
+  })
+})
