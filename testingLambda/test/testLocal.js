@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { calculatePosition, calculateDirection, calculateMove, validateGrid, validateCommands } from '../index.js'
+import { handler, calculatePosition, calculateDirection, calculateMove, validateGrid, validateCommands } from '../index.js'
 import { describe, it } from 'mocha'
 
 describe('unit testing', function () {
@@ -98,6 +98,8 @@ describe('integration test', function () {
       errors: []
     })
 
+    grid = JSON.stringify({ x: 5, y: 7 })
+    startingPos = JSON.stringify({ x: 3, y: 3, dir: 'E' })
     commands = 'LRFFRR FLFFFFRFF FFRFFF FFFFRR'
     result = calculatePosition(grid, startingPos, commands)
 
@@ -107,6 +109,8 @@ describe('integration test', function () {
       errors: []
     })
 
+    grid = JSON.stringify({ x: "5", y: "7" })
+    startingPos = JSON.stringify({ x: "3", y: "3", dir: 'E' })
     commands = 'LRFFRRFLFFFFRFFFFRFFFFFFFRR'.split('')
     result = calculatePosition(grid, startingPos, commands)
 
@@ -115,6 +119,15 @@ describe('integration test', function () {
       currentDirection: 'S',
       errors: []
     })
+
+    grid = undefined
+    startingPos = undefined
+    commands = undefined
+    result = calculatePosition(grid, startingPos, commands)
+
+    expect(result.errors[0].code).to.equal(5)
+
+
   }),
   it('handle an out-of-bounds situation', function () {
     const grid = { x: 5, y: 7 }

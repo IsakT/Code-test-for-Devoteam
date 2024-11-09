@@ -1,3 +1,18 @@
+export const handler = async (event) => {
+  const results = calculatePosition(event?.grid, event?.position, event?.commands)
+  if (results.errors.length === 0) {
+    return {
+      statusCode: 200,
+      body: JSON.stringify(results)
+    }
+  } else {
+    return {
+      statusCode: 400,
+      body: `An error occurred while processing request: ErrorCode: ${results.errors[0].code}, message: ${results.errors[0].message}`
+    }
+  }
+}
+
 function composeError(error, { grid, position, direction, commands }) {
   const errors = {
     'ebadcom': {
@@ -8,17 +23,22 @@ function composeError(error, { grid, position, direction, commands }) {
     'eoutbounds': {
       code: 2, message:
         'EOUTBOUNDS: Out of bounds. The robot was or tried to be positioned beyond its grid dimensions. /' +
-        `Expected position to be within grid: x ${grid.x}, y ${grid.y}. Found: x ${position.x} y ${position.y}`
+        `Expected position to be within grid: x ${grid?.x}, y ${grid?.y}. Found: x ${position?.x} y ${position?.y}`
     },
     'ebadpos': {
       code: 3, message:
         'EBADPOS: Faulty position or direction of robot. /' +
-        `Expected position to be within grid: x ${grid.x}, y ${grid.y}. Found: x ${position.x} y ${position.y}`
+        `Expected position to be within grid: x ${grid?.x}, y ${grid?.y}. Found: x ${position?.x} y ${position?.y}`
     },
     'ebadgrid': {
       code: 4, message:
         'EBADGRID: Expected grid dimensions to be positive integers.'
+    },
+    'ebadparams': {
+      code: 5, message:
+        'EBADPARAMS: one or more parameters were found to be undefined or falsy.'
     }
+
   }
 
   return { ...errors[error], context: { grid, position, direction, commands } }
@@ -44,6 +64,10 @@ function validMovements() {
 }
 
 function inputParsing(gridSize, position, commandsInput) {
+  if (!gridSize || !position || !commandsInput) {
+    return { errors: [composeError('ebadparams', { grid: gridSize, position, direction: position?.dir, commandsInput })] }
+  }
+
   const errors = []
   const grid = validateGrid(gridSize)
   const initialPosition = validatePosition(position)
@@ -169,9 +193,14 @@ function validateCommands(commandsInput) {
 }
 
 function validatePosition(pos) { 
-  const parsed = validateCoordinates(pos?.x, pos?.y)
+  let parsedInput = pos
+  if (typeof pos === 'string') {
+    parsedInput = JSON.parse(pos)
+  }
+
+  const parsed = validateCoordinates(parsedInput?.x, parsedInput?.y)
   if (parsed) {
-    return { x: parsed.x, y: parsed.y, dir: validateDirection(pos.dir) }  
+    return { x: parsed.x, y: parsed.y, dir: validateDirection(parsedInput.dir) }  
   }
   return false
 }
@@ -181,7 +210,11 @@ function validateDirection(direction) {
 }
 
 function validateGrid(grid) {
-  return validateCoordinates(grid?.x, grid?.y)
+  let parsedGrid = grid
+  if (typeof grid === 'string') {
+    parsedGrid = JSON.parse(grid)
+   }
+  return validateCoordinates(parsedGrid?.x, parsedGrid?.y)
 }
 
 function validateCoordinates(x, y) {
@@ -195,4 +228,5 @@ function validateCoordinates(x, y) {
 
 }
 
+// not needed in AWS Lambda
 export { calculatePosition, calculateDirection, calculateMove, validateGrid, validateCommands }
