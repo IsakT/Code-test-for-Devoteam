@@ -1,7 +1,5 @@
-// robot-cli.js
-
-import readline from "readline"
-import fetch from "node-fetch"
+import readline from 'readline'
+import fetch from 'node-fetch'
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -15,17 +13,17 @@ function askQuestion(query) {
 async function main() {
   try {
     const apiKey = await askQuestion('Enter the AWS API Gateway key.')
-    const gridx = await askQuestion("Enter grid width dimension (e.g., 5): ")
-    const gridy = await askQuestion("Enter grid depth dimensions (e.g., 5): ")
-    const posx = await askQuestion("Enter starting position x: (e.g., 3): ")
-    const posy = await askQuestion("Enter starting position y: (e.g., 4): ")
-    const posdir = await askQuestion("Enter starting position direction: (e.g., E or N or W or S): ")
-    const commands = await askQuestion("Enter movement commands (e.g., LRRFLRLFRF): ")
+    const gridx = await askQuestion('Enter grid width dimension (e.g., 5): ')
+    const gridy = await askQuestion('Enter grid depth dimensions (e.g., 5): ')
+    const posx = await askQuestion('Enter starting position x: (e.g., 3): ')
+    const posy = await askQuestion('Enter starting position y: (e.g., 4): ')
+    const posdir = await askQuestion('Enter starting position direction: (e.g., E or N or W or S): ')
+    const commands = await askQuestion('Enter movement commands (e.g., LRRFLRLFRF): ')
 
     rl.close()
 
     if (!apiKey || !gridx || !gridy || !posx || !posy || !posdir || !commands) {
-      console.log("All fields are required.")
+      console.log('All fields are required.')
       return
     }
 
@@ -57,7 +55,7 @@ async function main() {
     }
 
   } catch (error) {
-    console.error("An error occurred:", error)
+    console.error('An error occurred:', error)
   }
 }
 

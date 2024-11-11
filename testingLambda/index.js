@@ -1,8 +1,6 @@
 export const handler = async (event) => {
   const { grid, position, commands } = parseApiCallEvent(event)
   const results = calculatePosition(grid, position, commands)
-  
-  
   const statusCode = results.errors.length === 0 ? 200 : 400
   return {
     statusCode,
