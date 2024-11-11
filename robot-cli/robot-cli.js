@@ -12,7 +12,7 @@ function askQuestion(query) {
 
 async function main() {
   try {
-    const apiKey = await askQuestion('Enter the AWS API Gateway key.')
+    const apiKey = await askQuestion('Enter the AWS API Gateway key:')
     const gridx = await askQuestion('Enter grid width dimension (e.g., 5): ')
     const gridy = await askQuestion('Enter grid depth dimensions (e.g., 5): ')
     const posx = await askQuestion('Enter starting position x: (e.g., 3): ')
