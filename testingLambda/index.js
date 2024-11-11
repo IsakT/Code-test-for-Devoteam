@@ -1,16 +1,25 @@
 export const handler = async (event) => {
-  const results = calculatePosition(event?.grid, event?.position, event?.commands)
-  if (results.errors.length === 0) {
-    return {
-      statusCode: 200,
-      body: JSON.stringify(results)
-    }
-  } else {
-    return {
-      statusCode: 400,
-      body: `An error occurred while processing request: ErrorCode: ${results.errors[0].code}, message: ${results.errors[0].message}`
-    }
+  const { grid, position, commands } = parseApiCallEvent(event)
+  const results = calculatePosition(grid, position, commands)
+  
+  
+  const statusCode = results.errors.length === 0 ? 200 : 400
+  return {
+    statusCode,
+    body: JSON.stringify(results)
   }
+}
+
+function parseApiCallEvent(event) {
+  if (typeof event === 'string') {
+    event = JSON.parse(event)
+  }
+  if (event?.body) {
+    return typeof event.body === 'string' ? JSON.parse(event.body) : event.body
+  } else if (event?.grid){
+    return typeof event === 'string' ? JSON.parse(event) : event
+  }
+  throw('Error: parseApiCallEvent failed. Expected grid, position and commands, but found: ' + JSON.stringify(event))
 }
 
 function composeError(error, { grid, position, direction, commands }) {
