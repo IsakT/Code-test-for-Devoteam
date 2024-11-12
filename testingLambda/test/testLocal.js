@@ -130,7 +130,7 @@ describe('integration test', function () {
     result = await handler(exampleEventAWSApiGateWay())
     expect(result.statusCode).to.equal(200)
 
-    result = await handler(exampleEventAWSApiGateWay2())
+    result = await handler(JSON.stringify(exampleEventAWSApiGateWay()))
     expect(result.statusCode).to.equal(200)
 
   }),
@@ -169,7 +169,7 @@ function exampleEventAWSApiGateWay() {
         Host: 'mpzc95tozb.execute-api.eu-west-1.amazonaws.com',
         'User-Agent': 'curl/8.7.1',
         'X-Amzn-Trace-Id': 'Root=1-67326e1a-5c98ecf9221110796c860de8',
-        'x-api-key': 'hmkgGDQJur6R20bIL0sCD7GNjvwwPMq714DEgGtm',
+        'x-api-key': '',
         'X-Forwarded-For': '155.4.131.253',
         'X-Forwarded-Port': '443',
         'X-Forwarded-Proto': 'https'
@@ -201,48 +201,4 @@ function exampleEventAWSApiGateWay() {
       body: '{"grid": {"x": "5", "y": "7"}, "position": {"x": "3", "y": "3", "dir": "E"}, "commands": "FFRFFLR"}',
       isBase64Encoded: false
   }
-}
-function exampleEventAWSApiGateWay2() {
-  return JSON.stringify({
-    resource: '/CalculatePosition',
-    path: '/CalculatePosition',
-    httpMethod: 'POST',
-    headers: {
-      accept: '*/*',
-      'content-type': 'application/json',
-      Host: 'mpzc95tozb.execute-api.eu-west-1.amazonaws.com',
-      'User-Agent': 'curl/8.7.1',
-      'X-Amzn-Trace-Id': 'Root=1-67326e1a-5c98ecf9221110796c860de8',
-      'x-api-key': 'hmkgGDQJur6R20bIL0sCD7GNjvwwPMq714DEgGtm',
-      'X-Forwarded-For': '155.4.131.253',
-      'X-Forwarded-Port': '443',
-      'X-Forwarded-Proto': 'https'
-    },
-    multiValueHeaders: {},
-    queryStringParameters: null,
-    multiValueQueryStringParameters: null,
-    pathParameters: null,
-    stageVariables: null,
-    requestContext: {
-      resourceId: 'naqdgx',
-      resourcePath: '/CalculatePosition',
-      operationName: 'PostCalculatePosition',
-      httpMethod: 'POST',
-      extendedRequestId: 'BGYkPFwnDoEEAiA=',
-      requestTime: '11/Nov/2024:20:50:34 +0000',
-      path: '/default/CalculatePosition',
-      accountId: '590183965667',
-      protocol: 'HTTP/1.1',
-      stage: 'default',
-      domainPrefix: 'mpzc95tozb',
-      requestTimeEpoch: 1731358234795,
-      requestId: 'eeca7a17-5eb9-4702-affc-15606506c2a6',
-      identity: [Object],
-      domainName: 'mpzc95tozb.execute-api.eu-west-1.amazonaws.com',
-      deploymentId: 'lpf6jk',
-      apiId: 'mpzc95tozb'
-    },
-    body: '{"grid": {"x": "5", "y": "7"}, "position": {"x": "3", "y": "3", "dir": "E"}, "commands": "FFRFFLR"}',
-    isBase64Encoded: false
-  })
 }
